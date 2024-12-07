@@ -62,43 +62,55 @@ const InsuranceProvider = () => {
     }
   };
 
-  // Handle Query Health Records (GET request)
   const handleQueryRecords = async (e) => {
     e.preventDefault();
     setIsQueryingRecords(true);
-
+  
+    // Check if the Patient ID is valid
     if (!patientId.trim()) {
       alert("Please enter a valid Patient ID.");
       setIsQueryingRecords(false);
       return;
     }
-
-
-
+  
     try {
       // Dynamically constructing the URL using the patient ID
-      const response = await fetch(`http://localhost:3001/insurance/queryHealthRecordsorg1/${patientId}`);
-
+      const response = await fetch(`http://localhost:3001/insurance/queryHealthRecords/${patientId}`);
+  
+      // Check if the response is not OK and throw an error
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        // Try to extract the error message from the response body
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
       }
+  
+      // Parse the data if the request was successful
       const data = await response.json();
-
-      // Since the data is a single record, we directly set it
-      if (data && data.id) {
-        setRecord(data);
+  
+      // Check if the response contains an error indicating records are no longer available
+      if (data.error && data.error.includes("health records are no longer available")) {
+        alert(data.error);  // Display the error message from the server
+        setRecord(null);     // Clear any previous record data
       } else {
-        console.error("Unexpected data format:", data);
-        setRecord(null);
+        // Check if the data contains the record and set it
+        if (data && data.id) {
+          setRecord(data);
+        } else {
+          console.error("Unexpected data format:", data);
+          setRecord(null);
+          alert("Received unexpected data format. Please try again later.");
+        }
       }
-      //setQueriedRecords(data);
     } catch (error) {
+      // Suppress the default browser error popup
       console.error("Error querying records:", error);
-      alert("Failed to query records. Please try again later.");
+      // Display the error in a more user-friendly way
+      alert(`Failed to query records: ${error.message || "Please try again later."}`);
     } finally {
-      setIsQueryingRecords(false);
+      setIsQueryingRecords(false);  // Always reset the loading state
     }
   };
+  
 
   // Handle Process Claim
   const handleProcessClaim = async (e) => {

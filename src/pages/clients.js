@@ -59,7 +59,8 @@ const Client = () => {
         alert("Policy registered successfully!");
       } else {
         const errorData = await response.json();
-        alert(`Error registering policy: ${errorData.message || "Unknown error"}`);
+        console.log(errorData.message)
+        alert(`Error registering policy: ${errorData.message || "Records mismatch"}`);
       }
     } catch (error) {
       console.error("Error during registration:", error);
