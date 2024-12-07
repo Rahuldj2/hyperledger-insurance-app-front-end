@@ -5,6 +5,14 @@ const Client = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // States for form data
+  const [userId, setUserId] = useState("");
+  const [policyId, setPolicyId] = useState("");
+  const [premiumPaid, setPremiumPaid] = useState("");
+  const [isSmoker, setIsSmoker] = useState("");
+  const [hasDisease, setHasDisease] = useState("");
+  const [consent, setConsent] = useState(false);
 
   // Fetch policies from the API
   useEffect(() => {
@@ -29,11 +37,36 @@ const Client = () => {
     e.preventDefault();
     setIsRegistering(true);
 
-    // Simulate async operation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const requestBody = {
+      userID: String(userId), // Convert userId to string
+      policyID: String(policyId), // Convert policyId to string
+      premiumPaid: String(parseFloat(premiumPaid)), // Convert premiumPaid to string
+      isNonSmoker: String(isSmoker === "no"), // Convert boolean to string
+      hasDisease: String(hasDisease === "yes"), // Convert boolean to string
+      consent: String(consent) // Convert consent to string
+    };
 
-    setIsRegistering(false);
-    alert("Policy registered successfully!");
+    try {
+      const response = await fetch("http://localhost:3001/insurance/registerForPolicy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        alert("Policy registered successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Error registering policy: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+      alert("Failed to register policy. Please try again later.");
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   return (
@@ -102,34 +135,56 @@ const Client = () => {
               <input
                 type="text"
                 placeholder="User ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
                 className="p-3 text-gray-700 border rounded-md"
                 required
               />
               <input
                 type="text"
                 placeholder="Policy ID"
+                value={policyId}
+                onChange={(e) => setPolicyId(e.target.value)}
                 className="p-3 text-gray-700 border rounded-md"
                 required
               />
               <input
                 type="number"
                 placeholder="Premium Paid"
+                value={premiumPaid}
+                onChange={(e) => setPremiumPaid(e.target.value)}
                 className="p-3 text-gray-700 border rounded-md"
                 required
               />
-              <select className="p-3 text-gray-700 border rounded-md" required>
+              <select
+                className="p-3 text-gray-700 border rounded-md"
+                value={isSmoker}
+                onChange={(e) => setIsSmoker(e.target.value)}
+                required
+              >
                 <option value="">Is Smoker</option>
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
               </select>
-              <select className="p-3 text-gray-700 border rounded-md" required>
+              <select
+                className="p-3 text-gray-700 border rounded-md"
+                value={hasDisease}
+                onChange={(e) => setHasDisease(e.target.value)}
+                required
+              >
                 <option value="">Has Disease</option>
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
               </select>
               <div className="md:col-span-2">
                 <label className="flex text-gray-700 items-center">
-                  <input type="checkbox" className="mr-2" required />
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="mr-2"
+                    required
+                  />
                   I consent to share my data with the insurance provider.
                 </label>
               </div>
