@@ -1,34 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "./components/NavBar";
 
 const Client = () => {
   const [isRegistering, setIsRegistering] = useState(false);
-  const [policies] = useState([
-    {
-      policyId: "P001",
-      policyType: "Health Shield",
-      coverAmount: "5,00,000",
-      premium: "10,000/year",
-      startDate: "2024-01-01",
-      endDate: "2029-12-31",
-    },
-    {
-      policyId: "P002",
-      policyType: "Family Care",
-      coverAmount: "10,00,000",
-      premium: "18,000/year",
-      startDate: "2024-02-01",
-      endDate: "2030-01-31",
-    },
-    {
-      policyId: "P003",
-      policyType: "Senior Citizen Plan",
-      coverAmount: "3,00,000",
-      premium: "8,000/year",
-      startDate: "2024-03-01",
-      endDate: "2028-12-31",
-    },
-  ]);
+  const [policies, setPolicies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch policies from the API
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/insurance/queryAllPolicies");
+        const data = await response.json();
+        setPolicies(data);
+      } catch (error) {
+        console.error("Error fetching policies:", error);
+        alert("Failed to fetch policies. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPolicies();
+  }, []);
 
   // Handle policy registration
   const handleRegisterPolicy = async (e) => {
@@ -59,33 +53,45 @@ const Client = () => {
         {/* Available Policies Section */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold text-blue-600 mb-6">Available Policies</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {policies.map((policy) => (
-              <div
-                key={policy.policyId}
-                className="bg-white text-gray-900 shadow-md rounded-md p-6 text-center"
-              >
-                <h3 className="text-xl font-semibold text-blue-600 mb-4">
-                  {policy.policyType}
-                </h3>
-                <p>
-                  <strong>Policy ID:</strong> {policy.policyId}
-                </p>
-                <p>
-                  <strong>Cover Amount:</strong> {policy.coverAmount}
-                </p>
-                <p>
-                  <strong>Premium:</strong> {policy.premium}
-                </p>
-                <p>
-                  <strong>Start Date:</strong> {policy.startDate}
-                </p>
-                <p>
-                  <strong>End Date:</strong> {policy.endDate}
-                </p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <p>Loading policies...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {policies.map((policy) => (
+                <div
+                  key={policy.policyId}
+                  className="bg-white text-gray-900 shadow-md rounded-md p-6 text-center"
+                >
+                  <h3 className="text-xl font-semibold text-blue-600 mb-4">
+                    {policy.policyType}
+                  </h3>
+                  <p>
+                    <strong>Policy ID:</strong> {policy.policyId}
+                  </p>
+                  <p>
+                    <strong>Cover Amount:</strong> ₹{policy.coverAmount.toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>Premium:</strong> ₹{policy.premium.toLocaleString()}/year
+                  </p>
+                  <p>
+                    <strong>Start Date:</strong> {policy.startDate}
+                  </p>
+                  <p>
+                    <strong>End Date:</strong> {policy.endDate}
+                  </p>
+                  <p>
+                    <strong>Criteria:</strong>{" "}
+                    {policy.criteria.isNonSmoker ? "Non-Smoker" : "Smoker"} -{" "}
+                    {policy.criteria.hasDisease ? "Has Disease" : "No Disease"}
+                  </p>
+                  <p>
+                    <strong>Covered Diseases:</strong> {policy.coveredDiseases.join(", ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Register for Policy Section */}
@@ -123,11 +129,7 @@ const Client = () => {
               </select>
               <div className="md:col-span-2">
                 <label className="flex text-gray-700 items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-2"
-                    required
-                  />
+                  <input type="checkbox" className="mr-2" required />
                   I consent to share my data with the insurance provider.
                 </label>
               </div>
