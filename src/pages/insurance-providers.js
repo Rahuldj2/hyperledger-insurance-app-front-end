@@ -13,6 +13,8 @@ const InsuranceProvider = () => {
   const [patientId, setPatientId] = useState(""); // State for storing patient ID
   const [queriedRecords, setQueriedRecords] = useState([]);
 
+  const [processedClaims, setProcessedClaims] = useState([]);
+
 
 
   // Handle dynamic disease addition
@@ -169,6 +171,21 @@ const handleProcessClaim = async (userId) => {
     setIsProcessingClaim(false);
   }
 };
+
+// Fetch processed claims on load
+useEffect(() => {
+  const fetchProcessedClaims = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/claims/queryAllClaims");
+      const data = await response.json();
+      setProcessedClaims(data);
+    } catch (error) {
+      console.error("Error fetching processed claims:", error);
+    }
+  };
+
+  fetchProcessedClaims();
+}, []);
 
 
 
@@ -370,41 +387,61 @@ const handleProcessClaim = async (userId) => {
 
         {/* Process Claim Section */}
         <section className="mb-12">
-  <h2 className="text-2xl font-semibold text-black mb-6">Process Claim</h2>
-  <div className="bg-white p-6 shadow-md rounded-md">
-    {patientData.length === 0 ? (
-      <p className="text-black">No patient data available</p>
-    ) : (
-      patientData.map((patient) => (
-        <div
-          key={patient.userId}
-          className="border p-4 mb-4 rounded-md shadow-sm"
-        >
-          <h3 className="text-xl font-semibold text-black">{patient.userId}</h3>
-          <p className="text-black"><strong>Disease Diagnosis:</strong> {patient.diseaseDiagnosis}</p>
-          <p className="text-black"><strong>Treatment Plan:</strong> {patient.treatmentPlan}</p>
-          <p className="text-black"><strong>Hospital Name:</strong> {patient.hospitalName}</p>
-          <p className="text-black"><strong>Admission Date:</strong> {patient.admissionDate}</p>
-          <p className="text-black"><strong>Discharge Date:</strong> {patient.dischargeDate}</p>
-          <p className="text-black"><strong>Claim Status:</strong> {patient.claimStatus}</p>
-          <div className="text-center mt-4">
-            <button
-              onClick={() => handleProcessClaim(patient.userId)}
-              className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 flex items-center justify-center"
-              disabled={isProcessingClaim}
-            >
-              {isProcessingClaim ? (
-                <div className="animate-spin border-2 border-white border-t-transparent rounded-full h-6 w-6"></div>
-              ) : (
-                "Process Claim"
-              )}
-            </button>
-          </div>
+        <h2 className="text-2xl font-semibold text-black mb-6">Process Claim</h2>
+        <div className="bg-white p-6 shadow-md rounded-md">
+          {patientData.length === 0 ? (
+            <p className="text-black">No patient data available</p>
+          ) : (
+            patientData
+              .filter((patient) => patient.claimStatus !== "Processed") // Exclude processed claims
+              .map((patient) => (
+                <div key={patient.userId} className="border p-4 mb-4 rounded-md shadow-sm">
+                  <h3 className="text-xl font-semibold text-black">{patient.userId}</h3>
+                  <p className="text-black"><strong>Disease Diagnosis:</strong> {patient.diseaseDiagnosis}</p>
+                  <p className="text-black"><strong>Treatment Plan:</strong> {patient.treatmentPlan}</p>
+                  <p className="text-black"><strong>Hospital Name:</strong> {patient.hospitalName}</p>
+                  <p className="text-black"><strong>Admission Date:</strong> {patient.admissionDate}</p>
+                  <p className="text-black"><strong>Discharge Date:</strong> {patient.dischargeDate}</p>
+                  <p className="text-black"><strong>Claim Status:</strong> {patient.claimStatus}</p>
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={() => handleProcessClaim(patient.userId)}
+                      className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 flex items-center justify-center"
+                      disabled={isProcessingClaim}
+                    >
+                      {isProcessingClaim ? (
+                        <div className="animate-spin border-2 border-white border-t-transparent rounded-full h-6 w-6"></div>
+                      ) : (
+                        "Process Claim"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))
+          )}
         </div>
-      ))
-    )}
-  </div>
-</section>
+      </section>
+
+ {/* Processed Claims Section */}
+ <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-white mb-6">Processed Claims</h2>
+        <div className="bg-white p-6 shadow-md rounded-md">
+          {processedClaims.length === 0 ? (
+            <p className="text-black">No processed claims available</p>
+          ) : (
+            processedClaims.map((claim) => (
+              <div key={claim.userId} className="border p-4 mb-4 rounded-md shadow-sm">
+                <h3 className="text-xl font-semibold text-black">{claim.userId}</h3>
+                <p className="text-black"><strong>Policy ID:</strong> {claim.policyId}</p>
+                <p className="text-black"><strong>Settlement Amount:</strong> ${claim.settlementAmount}</p>
+                <p className="text-black"><strong>Hospital Name:</strong> {claim.hospitalName}</p>
+                <p className="text-black"><strong>Status:</strong> {claim.status}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
 
       </main>
     </div>
