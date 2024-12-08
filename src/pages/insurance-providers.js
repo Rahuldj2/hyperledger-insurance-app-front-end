@@ -387,7 +387,7 @@ useEffect(() => {
 
         {/* Process Claim Section */}
         <section className="mb-12">
-        <h2 className="text-2xl font-semibold text-black mb-6">Process Claim</h2>
+        <h2 className="text-2xl font-semibold text-white mb-6">Pending Claim Requests</h2>
         <div className="bg-white p-6 shadow-md rounded-md">
           {patientData.length === 0 ? (
             <p className="text-black">No patient data available</p>
