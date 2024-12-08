@@ -1,5 +1,6 @@
 import { useState } from "react";
 import NavBar from "./components/NavBar";
+import { useEffect } from "react";
 
 const InsuranceProvider = () => {
   // States for managing forms and data
@@ -11,6 +12,8 @@ const InsuranceProvider = () => {
   const [record, setRecord] = useState(null);
   const [patientId, setPatientId] = useState(""); // State for storing patient ID
   const [queriedRecords, setQueriedRecords] = useState([]);
+
+
 
   // Handle dynamic disease addition
   const addDisease = (e) => {
@@ -112,16 +115,62 @@ const InsuranceProvider = () => {
   };
   
 
-  // Handle Process Claim
-  const handleProcessClaim = async (e) => {
-    e.preventDefault();
-    setIsProcessingClaim(true);
+  const [patientData, setPatientData] = useState([]);
+  // const [isProcessingClaim, setIsProcessingClaim] = useState(false);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  // Fetch data on load
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/claims/queryAllPatientData");
+        const data = await response.json();
+        setPatientData(data);
+      } catch (error) {
+        console.error("Error fetching patient data:", error);
+      }
+    };
 
-    setIsProcessingClaim(false);
-    alert("Claim processed successfully!");
+    fetchPatientData();
+  }, []);
+// Handle process claim click
+const handleProcessClaim = async (userId) => {
+  setIsProcessingClaim(true);
+  console.log("enter");
+
+  const data = {
+    userID: userId,
   };
+
+  console.log(data);
+
+  try {
+    const response = await fetch("http://localhost:3001/claims/processClaim", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Log the raw response
+    const responseText = await response.text();
+    console.log("Raw response:", responseText);
+
+    // Check if the response is the success message
+    if (responseText.includes("processed successfully")) {
+      alert(`Claim processed for ${userId}`);
+    } else {
+      alert("Error processing claim");
+    }
+  } catch (error) {
+    console.error("Error processing claim:", error);
+    alert("Error processing claim");
+  } finally {
+    setIsProcessingClaim(false);
+  }
+};
+
+
 
   return (
     <div>
@@ -321,25 +370,42 @@ const InsuranceProvider = () => {
 
         {/* Process Claim Section */}
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-blue-600 mb-6">Process Claim</h2>
-          <div className="bg-white p-6 shadow-md rounded-md">
-            <form onSubmit={handleProcessClaim}>
-              <div className="text-center">
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-green-500 text-white font-semibold rounded-full shadow-md hover:bg-green-600 flex items-center justify-center"
-                  disabled={isProcessingClaim}
-                >
-                  {isProcessingClaim ? (
-                    <div className="animate-spin border-2 border-white border-t-transparent rounded-full h-6 w-6"></div>
-                  ) : (
-                    "Process Claim"
-                  )}
-                </button>
-              </div>
-            </form>
+  <h2 className="text-2xl font-semibold text-black mb-6">Process Claim</h2>
+  <div className="bg-white p-6 shadow-md rounded-md">
+    {patientData.length === 0 ? (
+      <p className="text-black">No patient data available</p>
+    ) : (
+      patientData.map((patient) => (
+        <div
+          key={patient.userId}
+          className="border p-4 mb-4 rounded-md shadow-sm"
+        >
+          <h3 className="text-xl font-semibold text-black">{patient.userId}</h3>
+          <p className="text-black"><strong>Disease Diagnosis:</strong> {patient.diseaseDiagnosis}</p>
+          <p className="text-black"><strong>Treatment Plan:</strong> {patient.treatmentPlan}</p>
+          <p className="text-black"><strong>Hospital Name:</strong> {patient.hospitalName}</p>
+          <p className="text-black"><strong>Admission Date:</strong> {patient.admissionDate}</p>
+          <p className="text-black"><strong>Discharge Date:</strong> {patient.dischargeDate}</p>
+          <p className="text-black"><strong>Claim Status:</strong> {patient.claimStatus}</p>
+          <div className="text-center mt-4">
+            <button
+              onClick={() => handleProcessClaim(patient.userId)}
+              className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 flex items-center justify-center"
+              disabled={isProcessingClaim}
+            >
+              {isProcessingClaim ? (
+                <div className="animate-spin border-2 border-white border-t-transparent rounded-full h-6 w-6"></div>
+              ) : (
+                "Process Claim"
+              )}
+            </button>
           </div>
-        </section>
+        </div>
+      ))
+    )}
+  </div>
+</section>
+
       </main>
     </div>
   );
