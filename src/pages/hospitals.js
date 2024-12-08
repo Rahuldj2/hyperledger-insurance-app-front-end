@@ -62,6 +62,8 @@ const handleRequestClaim = async (e) => {
     dischargeDate: formData.get("dischargeDate"),
   };
 
+  console.log(data)
+
   // Send POST request to upload patient details
   try {
     const response = await fetch("http://localhost:3001/claims/uploadPatientDetails", {
@@ -70,7 +72,10 @@ const handleRequestClaim = async (e) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+
     });
+    
+    console.log(response)
 
     if (!response.ok) {
       throw new Error("Failed to request claim");
@@ -273,21 +278,6 @@ const handleRequestClaim = async (e) => {
                   type="date"
                   id="dischargeDate"
                   name="dischargeDate"  // Added name attribute
-                  className="w-full p-3 text-gray-900 border rounded-md focus:outline-blue-500"
-                  required
-                />
-              </div>
-
-              {/* Required Amount */}
-              <div className="md:col-span-2">
-                <label htmlFor="requiredAmount" className="block text-gray-600 mb-2 font-medium">
-                  Required Amount
-                </label>
-                <input
-                  type="number"
-                  id="requiredAmount"
-                  name="requiredAmount"  // Added name attribute
-                  placeholder="Enter Required Amount"
                   className="w-full p-3 text-gray-900 border rounded-md focus:outline-blue-500"
                   required
                 />
